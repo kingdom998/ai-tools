@@ -1,0 +1,12 @@
+.idea
+.histroy
+.vscode
+__pycache__
+
+*.iml
+*.class
+*.jar
+*.pyc
+*.pyo
+*.pyd
+*.egg
