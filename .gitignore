@@ -2,6 +2,7 @@
 .histroy
 .vscode
 __pycache__
+.gradio
 
 *.iml
 *.class
