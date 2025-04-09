@@ -4,97 +4,99 @@ from util import do_request
 
 default_prompt = "一只狗在海边溜达"
 default_url = "https://static.streamlit.io/examples/dog.jpg"
+null_url = "https://via.placeholder.com/400x300.png?text=结果尚未生成"
 
 
-def req_video(prompt, img_url):
-    videos, tm, err = do_request(
-        call_func=VideoSynthesis.call,
-        call_args={
-            "model": VideoSynthesis.Models.wanx_2_1_t2v_turbo,
-            "prompt": prompt,
-            "img_url": img_url,
-        },
-        result_handler=lambda output: (
-            [output.video_url] if isinstance(output, object) else []
-        ),
+# 通用请求处理函数
+def req_synthesis(call_func, model, prompt, img_url, style=None, n=1, is_video=False):
+    args = {"model": model, "prompt": prompt, "img_url": img_url, "n": n}
+    if style:
+        args["style"] = style
+    if not is_video:
+        args["ref_img"] = img_url
+
+    result_handler = lambda output: (
+        [output.video_url]
+        if isinstance(output, object) and is_video
+        else [r.url for r in output.results] if isinstance(output, object) else []
     )
-    print(f"imgs: {videos}", tm, err)
+
+    data, tm, err = do_request(
+        call_func=call_func, call_args=args, result_handler=result_handler
+    )
+
     if err:
         st.error(err)
-        return
+        return None
 
-    st.session_state.generated_videos = videos
+    return data
 
 
+# 生成图像请求
 def req_img(prompt, img_url):
-    imgs, tm, err = do_request(
+    imgs = req_synthesis(
         call_func=ImageSynthesis.call,
-        call_args={
-            "model": ImageSynthesis.Models.wanx_v1,
-            "prompt": prompt,
-            "ref_img": img_url,
-            "style": "<3d cartoon>",
-            "n": 1,
-        },
-        result_handler=lambda output: (
-            [r.url for r in output.results] if isinstance(output, object) else [""]
-        ),
+        model=ImageSynthesis.Models.wanx_v1,
+        prompt=prompt,
+        img_url=img_url,
+        style="<3d cartoon>",
+        is_video=False,
     )
-    print(f"imgs: {imgs}", tm, err)
-    if err:
-        st.error(err)
-        return
+    if imgs:
+        st.session_state.generated_imgs = imgs
 
-    st.session_state.generated_imgs = imgs
+
+# 生成视频请求
+def req_video(prompt, img_url):
+    videos = req_synthesis(
+        call_func=VideoSynthesis.call,
+        model=VideoSynthesis.Models.wanx_2_1_t2v_turbo,
+        prompt=prompt,
+        img_url=img_url,
+        is_video=True,
+    )
+    if videos:
+        st.session_state.generated_videos = videos
 
 
 tab1, tab2 = st.tabs(["图生图", "图生视频"])
-with tab1:
-    prompt = st.text_input("prompt", placeholder=default_prompt)
-    img_url = st.text_input("img url", placeholder=default_url)
-    if not img_url:
-        img_url = default_url
+
+
+def display_input_tab(tab, is_video=False):
+    prompt_key = "prompt" + ("_video" if is_video else "_img")
+    img_url_key = "img_url" + ("_video" if is_video else "_img")
+    prompt = st.text_input("prompt", key=prompt_key, placeholder=default_prompt)
+    img_url = (
+        st.text_input("img url", key=img_url_key, placeholder=default_url)
+        or default_url
+    )
     col1, col2 = st.columns([1, 1])
     with col1:
         st.text("原始图片")
         st.image(img_url, width=400)
     with col2:
         st.text("生成结果")
-        urls = (
-            st.session_state.generated_imgs
-            if "generated_imgs" in st.session_state
-            else "https://via.placeholder.com/400x300.png?text=结果尚未生成"
-        )
-        st.image(urls, width=400)
+        result_key = "generated_videos" if is_video else "generated_imgs"
+        urls = st.session_state.get(result_key, "")
+        urls = [null_url] if not is_video and not urls else urls
+        if is_video:
+            if len(urls) >0 :
+                st.video(urls[0])
+        else:
+            st.image(urls, width=400)
+
+    on_click = req_video if is_video else req_img
     st.button(
         "提交",
-        key="submit",
-        on_click=req_img,
+        key="submit" + ("2" if is_video else ""),
+        on_click=on_click,
         args=[prompt, img_url],
         use_container_width=True,
     )
 
+
+with tab1:
+    display_input_tab(tab=tab1, is_video=False)
+
 with tab2:
-    prompt = st.text_input("prompt", key="prompt", placeholder=default_prompt)
-    img_url = st.text_input("img url", key="img_url", placeholder=default_url)
-    if not img_url:
-        img_url = default_url
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        st.text("原始图片")
-        st.image(img_url, width=400)
-    with col2:
-        st.text("生成结果")
-        urls = (
-            st.session_state.generated_videos
-            if "generated_videos" in st.session_state
-            else "https://via.placeholder.com/400x300.png?text=结果图尚未生成"
-        )
-        st.video(urls)
-    st.button(
-        "提交",
-        key="submit2",
-        on_click=req_video,
-        args=[prompt, img_url],
-        use_container_width=True,
-    )
+    display_input_tab(tab=tab2, is_video=True)
