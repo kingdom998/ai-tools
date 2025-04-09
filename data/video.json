@@ -1,0 +1,19 @@
+{
+    "status_code": 200,
+    "request_id": "d1a82316-3d6c-9911-b9fb-499a646e6eba",
+    "code": null,
+    "message": "",
+    "output": {
+        "task_id": "41d1b7e5-f93f-4015-82b7-aa44e4d46ad3",
+        "task_status": "SUCCEEDED",
+        "video_url": "https://dashscope-result-wlcb.oss-cn-wulanchabu.aliyuncs.com/1d/f9/20250409/57fa8bff/41d1b7e5-f93f-4015-82b7-aa44e4d46ad3.mp4?Expires=1744292351&OSSAccessKeyId=LTAI5tKPD3TMqf2Lna1fASuh&Signature=Skux6J%2BTc%2FJ4ocePwvfueIaUT6o%3D",
+        "submit_time": "2025-04-09 21:37:52.491",
+        "scheduled_time": "2025-04-09 21:37:52.511",
+        "end_time": "2025-04-09 21:39:12.548"
+    },
+    "usage": {
+        "video_count": 1,
+        "video_duration": 5,
+        "video_ratio": "1280*720"
+    }
+}

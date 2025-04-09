@@ -1,0 +1,26 @@
+{
+    "status_code": 200,
+    "request_id": "e845ea82-b5aa-9371-8d80-8d1f5b6b28ac",
+    "code": null,
+    "message": "",
+    "output": {
+        "task_id": "d3f979dc-4787-468e-a8d5-197352bf00af",
+        "task_status": "SUCCEEDED",
+        "results": [
+            {
+                "url": "https://dashscope-result-bj.oss-cn-beijing.aliyuncs.com/1d/38/20250409/59320e4c/398d016e-e284-4219-981d-95a0acbc97ad-1.png?Expires=1744293097&OSSAccessKeyId=LTAI5tQZd8AEcZX6KZV4G8qL&Signature=FSbkzu84QTKLYMsliL4DC%2BkT1iA%3D"
+            }
+        ],
+        "submit_time": "2025-04-09 21:51:10.923",
+        "scheduled_time": "2025-04-09 21:51:10.962",
+        "end_time": "2025-04-09 21:51:38.551",
+        "task_metrics": {
+            "TOTAL": 1,
+            "SUCCEEDED": 1,
+            "FAILED": 0
+        }
+    },
+    "usage": {
+        "image_count": 1
+    }
+}
