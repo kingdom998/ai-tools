@@ -1,40 +1,15 @@
 import streamlit as st
 from dashscope import ImageSynthesis, VideoSynthesis
-from util import do_request
+from util import req_synthesis
 
 default_prompt = "一只狗在海边溜达"
 default_url = "https://static.streamlit.io/examples/dog.jpg"
 null_url = "https://via.placeholder.com/400x300.png?text=结果尚未生成"
 
 
-# 通用请求处理函数
-def req_synthesis(call_func, model, prompt, img_url, style=None, n=1, is_video=False):
-    args = {"model": model, "prompt": prompt, "img_url": img_url, "n": n}
-    if style:
-        args["style"] = style
-    if not is_video:
-        args["ref_img"] = img_url
-
-    result_handler = lambda output: (
-        [output.video_url]
-        if isinstance(output, object) and is_video
-        else [r.url for r in output.results] if isinstance(output, object) else []
-    )
-
-    data, tm, err = do_request(
-        call_func=call_func, call_args=args, result_handler=result_handler
-    )
-
-    if err:
-        st.error(err)
-        return None
-
-    return data
-
-
 # 生成图像请求
 def req_img(prompt, img_url):
-    imgs = req_synthesis(
+    st.session_state.generated_imgs, tm, err = req_synthesis(
         call_func=ImageSynthesis.call,
         model=ImageSynthesis.Models.wanx_v1,
         prompt=prompt,
@@ -42,21 +17,23 @@ def req_img(prompt, img_url):
         style="<3d cartoon>",
         is_video=False,
     )
-    if imgs:
-        st.session_state.generated_imgs = imgs
+    if err:
+        st.error(err)
+        return None
 
 
 # 生成视频请求
 def req_video(prompt, img_url):
-    videos = req_synthesis(
+    st.session_state.generated_videos, tm, err = req_synthesis(
         call_func=VideoSynthesis.call,
         model=VideoSynthesis.Models.wanx_2_1_t2v_turbo,
         prompt=prompt,
         img_url=img_url,
         is_video=True,
     )
-    if videos:
-        st.session_state.generated_videos = videos
+    if err:
+        st.error(err)
+        return None
 
 
 tab1, tab2 = st.tabs(["图生图", "图生视频"])
@@ -80,7 +57,7 @@ def display_input_tab(tab, is_video=False):
         urls = st.session_state.get(result_key, "")
         urls = [null_url] if not is_video and not urls else urls
         if is_video:
-            if len(urls) >0 :
+            if len(urls) > 0:
                 st.video(urls[0])
         else:
             st.image(urls, width=400)
