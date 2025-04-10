@@ -1,6 +1,12 @@
+import sys
+import os
+path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+print(path)
+sys.path.append(path)
+
 import streamlit as st
 from dashscope import ImageSynthesis, VideoSynthesis
-from util import req_synthesis
+from utils.util import req_synthesis
 
 default_prompt = "一只狗在海边溜达"
 default_url = "https://static.streamlit.io/examples/dog.jpg"
