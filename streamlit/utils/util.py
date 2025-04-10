@@ -1,5 +1,12 @@
 from http import HTTPStatus
 from datetime import datetime
+import sys
+import os
+
+path = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(path)
+import streamlit as st
+from dashscope import ImageSynthesis, VideoSynthesis
 
 
 # 默认值
@@ -45,3 +52,33 @@ def req_synthesis(call_func, model, prompt, img_url, style=None, n=1, is_video=F
     return do_request(
         call_func=call_func, call_args=args, result_handler=result_handler
     )
+
+
+def call_req(prompt, img_url, is_video=False):
+    if is_video:
+        urls, tm, err = req_synthesis(
+            call_func=VideoSynthesis.call,
+            model=VideoSynthesis.Models.wanx_2_1_t2v_turbo,
+            prompt=prompt,
+            img_url=img_url,
+            is_video=True,
+        )
+    else:
+        urls, tm, err = req_synthesis(
+            call_func=ImageSynthesis.call,
+            model=ImageSynthesis.Models.wanx_v1,
+            prompt=prompt,
+            img_url=img_url,
+            style="<3d cartoon>",
+            is_video=False,
+        )
+    if err:
+        st.error(err)
+        return None
+
+    if not urls:
+        return
+    if is_video:
+        st.session_state.generated_videos = urls
+    else:
+        st.session_state.generated_imgs = urls
