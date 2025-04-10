@@ -36,9 +36,6 @@ def req_video(prompt, img_url):
         return None
 
 
-tab1, tab2 = st.tabs(["图生图", "图生视频"])
-
-
 def display_input_tab(tab, is_video=False):
     prompt_key = "prompt" + ("_video" if is_video else "_img")
     img_url_key = "img_url" + ("_video" if is_video else "_img")
@@ -72,6 +69,7 @@ def display_input_tab(tab, is_video=False):
     )
 
 
+tab1, tab2 = st.tabs(["图生图", "图生视频"])
 with tab1:
     display_input_tab(tab=tab1, is_video=False)
 
