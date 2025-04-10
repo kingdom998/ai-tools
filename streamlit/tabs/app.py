@@ -1,53 +1,18 @@
 import sys
 import os
+
 path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-print(path)
 sys.path.append(path)
 
 import streamlit as st
-from dashscope import ImageSynthesis, VideoSynthesis
-from utils.util import req_synthesis
-
-default_prompt = "一只狗在海边溜达"
-default_url = "https://static.streamlit.io/examples/dog.jpg"
-null_url = "https://via.placeholder.com/400x300.png?text=结果尚未生成"
+from utils.util import default_prompt, default_url, null_url, call_req
 
 
-# 生成图像请求
-def req_img(prompt, img_url):
-    st.session_state.generated_imgs, tm, err = req_synthesis(
-        call_func=ImageSynthesis.call,
-        model=ImageSynthesis.Models.wanx_v1,
-        prompt=prompt,
-        img_url=img_url,
-        style="<3d cartoon>",
-        is_video=False,
-    )
-    if err:
-        st.error(err)
-        return None
-
-
-# 生成视频请求
-def req_video(prompt, img_url):
-    st.session_state.generated_videos, tm, err = req_synthesis(
-        call_func=VideoSynthesis.call,
-        model=VideoSynthesis.Models.wanx_2_1_t2v_turbo,
-        prompt=prompt,
-        img_url=img_url,
-        is_video=True,
-    )
-    if err:
-        st.error(err)
-        return None
-
-
-def display_input_tab(tab, is_video=False):
-    prompt_key = "prompt" + ("_video" if is_video else "_img")
-    img_url_key = "img_url" + ("_video" if is_video else "_img")
-    prompt = st.text_input("prompt", key=prompt_key, placeholder=default_prompt)
+def display_input_tab(is_video=False):
+    suffix = "video" if is_video else "img"
+    prompt = st.text_input("prompt", key="prompt_"+ suffix, placeholder=default_prompt)
     img_url = (
-        st.text_input("img url", key=img_url_key, placeholder=default_url)
+        st.text_input("img url", key="img_" + suffix, placeholder=default_url)
         or default_url
     )
     col1, col2 = st.columns([1, 1])
@@ -65,19 +30,18 @@ def display_input_tab(tab, is_video=False):
         else:
             st.image(urls, width=400)
 
-    on_click = req_video if is_video else req_img
     st.button(
         "提交",
         key="submit" + ("2" if is_video else ""),
-        on_click=on_click,
-        args=[prompt, img_url],
+        on_click=call_req,
+        args=[prompt, img_url, is_video],
         use_container_width=True,
     )
 
 
 tab1, tab2 = st.tabs(["图生图", "图生视频"])
 with tab1:
-    display_input_tab(tab=tab1, is_video=False)
+    display_input_tab(is_video=False)
 
 with tab2:
-    display_input_tab(tab=tab2, is_video=True)
+    display_input_tab(is_video=True)
