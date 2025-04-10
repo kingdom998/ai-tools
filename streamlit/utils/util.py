@@ -2,6 +2,12 @@ from http import HTTPStatus
 from datetime import datetime
 
 
+# 默认值
+default_prompt = "一只狗在海边溜达"
+default_url = "https://static.streamlit.io/examples/dog.jpg"
+null_url = "https://via.placeholder.com/400x300.png?text=结果尚未生成"
+
+
 def do_request(call_func, call_args, result_handler):
     start_time = datetime.now()
     rsp = call_func(**call_args)

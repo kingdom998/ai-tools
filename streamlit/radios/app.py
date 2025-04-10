@@ -5,11 +5,7 @@ print(path)
 sys.path.append(path)
 import streamlit as st
 from dashscope import ImageSynthesis, VideoSynthesis
-from utils.util import req_synthesis
-
-default_prompt = "一只狗在海边溜达"
-default_url = "https://static.streamlit.io/examples/dog.jpg"
-null_url = "https://via.placeholder.com/400x300.png?text=结果尚未生成"
+from utils.util import req_synthesis, default_prompt, default_url, null_url
 
 
 # 生成图像请求
