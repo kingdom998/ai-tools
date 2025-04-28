@@ -1,5 +1,11 @@
-from _llm import llm
+import sys
+import os
+
+path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(path)
+from util._llm import llm
 from langchain_core.prompts import ChatPromptTemplate
+from langchain.schema.output_parser import StrOutputParser
 
 prompt = ChatPromptTemplate.from_messages(
     [
@@ -19,15 +25,14 @@ def translate(text, input_language, output_language):
             "output_language": output_language,
             "input": text,
         }
-        chain = prompt | llm
-        resp = chain.invoke(content)
-        return resp.content
+        chain = prompt | llm | StrOutputParser()
+        rsp = chain.invoke(content)
+        return rsp
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return None
 
 
-# Example usage
 if __name__ == "__main__":
     while True:
         try:
