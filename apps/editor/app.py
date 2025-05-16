@@ -2,6 +2,7 @@ import streamlit as st
 from PIL import Image
 import os
 import sys
+import io
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from core import generate_image
@@ -16,20 +17,23 @@ with col2:
         "分辨率:", ["1024x1024", "1024x1536", "1536x1536", "auto"], index=0
     )
 prompt = st.text_area(
-    "提示词（英文效果更好）:", "A cute cat sitting on a laptop, digital art"
+    "提示词（英文效果更好）:", "修改图片风格"
 )
 
-uploaded_file = st.file_uploader("参考图（可选）:", type=["jpg", "png", "jpeg"])
-reference_image = None
+upload_files = st.file_uploader("参考图（可选）:", type=["jpg", "png", "jpeg"], accept_multiple_files=True)
+files = []
 col1, col2 = st.columns(2)
 with col1:
-    if uploaded_file:
-        image_pil = Image.open(uploaded_file)
-        st.image(image_pil, caption="参考图", width=600)
-        uploaded_file.seek(0)
-        reference_image = {
-            "image": (uploaded_file.name, uploaded_file, uploaded_file.type)
-        }
+    if upload_files:
+        pils = []
+        for f in upload_files:
+            f.seek(0)
+            # 注意：需要复制出 file bytes（不然多次使用 f 可能指针错乱）
+            file_bytes = f.read()
+            pils.append(Image.open(io.BytesIO(file_bytes)))  # 显示图像
+            files.append(("image[]", (f.name, io.BytesIO(file_bytes), f.type)))  # 重新用
+
+        st.image(pils, caption=[f.name for f in upload_files], width=600)
     else:
         st.info("无参考图")
 
@@ -45,7 +49,7 @@ if st.button("生成图片"):
             prompt=prompt,
             quality=quality,
             size=size,
-            files=reference_image,
+            files=files,
         )
 
         if error:
