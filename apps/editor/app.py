@@ -14,7 +14,7 @@ with col1:
     quality = st.selectbox("图片质量:", ["low", "medium", "high"], index=2)
 with col2:
     size = st.selectbox(
-        "分辨率:", ["1024x1024", "1024x1536", "1536x1536", "auto"], index=0
+        "分辨率:", ["1024x1024", "1024x1536", "1536x1024", "auto"], index=0
     )
 prompt = st.text_area(
     "提示词（英文效果更好）:", "修改图片风格"
