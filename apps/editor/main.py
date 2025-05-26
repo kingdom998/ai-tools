@@ -15,8 +15,17 @@ def req_generate(quality, size, prompt, upload_files):
     print(
         f"生成图片: quality={quality}, size={size}, prompt={prompt}, files={len(upload_files or [])}"
     )
+    
+    
+    img_files = []
+    for f in upload_files or []:
+        # 打开文件并构建 requests 所需的 tuple: (filename, fileobj, mimetype)
+        # mimetype 可以根据需要指定或让 requests 自动推断
+        file_tuple = (os.path.basename(f), open(f, "rb"), "image/png")
+        img_files.append(("image[]", file_tuple))
+    
     img_list, err = generate_image(
-        prompt=prompt, quality=quality, size=size, files=upload_files
+        prompt=prompt, quality=quality, size=size, files=img_files
     )
     imgs = [Image.new("RGB", (512, 512), color="white")]
     if img_list:
@@ -38,13 +47,16 @@ with gr.Blocks(title="图像生成器") as demo:
                 choices=quality_options, value="high", label="图片质量"
             )
             size = gr.Dropdown(choices=size_options, value="1024x1024", label="分辨率")
+            n = gr.Number(
+                value=1, label="生成数量", step=1, maximum=4, interactive=True
+            )
             prompt = gr.TextArea(
                 max_lines=5,
                 label="提示词（英文效果更好）",
                 placeholder="修改图片风格",
                 show_copy_button=True,
             )
-            upload_files = gr.File(
+            file_uploads = gr.File(
                 label="参考图（可选，可多选）",
                 file_types=["image"],
                 file_count="multiple",
@@ -57,11 +69,11 @@ with gr.Blocks(title="图像生成器") as demo:
             output_image = gr.Gallery(label="效果图", type="pil")
             status = gr.Textbox(label="状态", interactive=False)
     btn_generate = gr.Button("生成图片", variant="primary")
-    upload_files.change(fn=preview_images, inputs=upload_files, outputs=gallery_src)
+    file_uploads.change(fn=preview_images, inputs=file_uploads, outputs=gallery_src)
 
     btn_generate.click(
         fn=req_generate,
-        inputs=[quality, size, prompt, upload_files],
+        inputs=[quality, size, prompt, file_uploads],
         outputs=[output_image, status],
     )
 
