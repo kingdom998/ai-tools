@@ -45,17 +45,18 @@ with col2:
 # 生成图片按钮
 if st.button("生成图片"):
     with st.spinner("正在生成图片，请稍候..."):
-        image_bytes, error = generate_image(
+        imgs, error = generate_image(
             prompt=prompt,
             quality=quality,
             size=size,
             files=files,
+            n=2,
         )
 
         if error:
             st.error("图片生成失败，服务器返回错误。")
             st.write(error)
         else:
-            output_placeholder.image(image_bytes, width=600, use_container_width=True)
+            output_placeholder.image(imgs, width=600, use_container_width=True)
             st.success("✅ 图片生成成功！")
             st.balloons()

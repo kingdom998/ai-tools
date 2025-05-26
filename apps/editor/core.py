@@ -13,11 +13,11 @@ headers = {
 }
 
 
-def generate_image(prompt, quality="high", size="1024x1024", files=None):
+def generate_image(prompt, quality="high", size="1024x1024", files=None, n=1):
     payload = {
         "model": "gpt-image-1",
         "prompt": prompt,
-        "n": 1,
+        "n": n,
         "size": size,
         "quality": quality,
     }
@@ -36,6 +36,6 @@ def generate_image(prompt, quality="high", size="1024x1024", files=None):
         print("error", response.json().get("error"))
         return None, response.json().get("error").get("message")
 
-    b64 = response.json()["data"][0]["b64_json"]
-    image_bytes = base64.b64decode(b64)
-    return image_bytes, None
+    data = response.json()["data"]
+    imgs = [base64.b64decode(img["b64_json"]) for img in data]
+    return imgs, None

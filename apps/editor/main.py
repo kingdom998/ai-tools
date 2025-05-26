@@ -15,10 +15,14 @@ def req_generate(quality, size, prompt, upload_files):
     print(
         f"生成图片: quality={quality}, size={size}, prompt={prompt}, files={len(upload_files or [])}"
     )
-    img_bytes, err = generate_image(prompt=prompt, quality=quality, size=size, files=upload_files)
-    img = Image.new("RGB", (512, 512), color="white") if not img_bytes else Image.open(io.BytesIO(img_bytes))
+    img_list, err = generate_image(
+        prompt=prompt, quality=quality, size=size, files=upload_files
+    )
+    imgs = [Image.new("RGB", (512, 512), color="white")]
+    if img_list:
+        imgs = [Image.open(io.BytesIO(img)) for img in img_list]
     status = err if err else "图片生成成功！"
-    return img, status
+    return imgs, status
 
 
 def preview_images(upload_files):
@@ -45,13 +49,15 @@ with gr.Blocks(title="图像生成器") as demo:
                 file_types=["image"],
                 file_count="multiple",
             )
-            image_gallery = gr.Gallery(label="预览图", show_label=True, columns=2, height="auto")
+            gallery_src = gr.Gallery(
+                label="预览图", show_label=True, columns=2, height="auto"
+            )
 
         with gr.Column(scale=1):
-            output_image = gr.Image(label="生成图", type="pil")
+            output_image = gr.Gallery(label="效果图", type="pil")
             status = gr.Textbox(label="状态", interactive=False)
     btn_generate = gr.Button("生成图片", variant="primary")
-    upload_files.change(fn=preview_images, inputs=upload_files, outputs=image_gallery)
+    upload_files.change(fn=preview_images, inputs=upload_files, outputs=gallery_src)
 
     btn_generate.click(
         fn=req_generate,
