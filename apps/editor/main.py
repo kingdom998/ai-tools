@@ -1,0 +1,62 @@
+import gradio as gr
+from PIL import Image
+import os
+import io
+import sys
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from core import generate_image
+
+quality_options = ["low", "medium", "high"]
+size_options = ["1024x1024", "1024x1536", "1536x1024", "auto"]
+
+
+def req_generate(quality, size, prompt, upload_files):
+    print(
+        f"生成图片: quality={quality}, size={size}, prompt={prompt}, files={len(upload_files or [])}"
+    )
+    img_bytes, err = generate_image(prompt=prompt, quality=quality, size=size, files=upload_files)
+    img = Image.new("RGB", (512, 512), color="white") if not img_bytes else Image.open(io.BytesIO(img_bytes))
+    status = err if err else "图片生成成功！"
+    return img, status
+
+
+def preview_images(upload_files):
+    if not upload_files:
+        return []
+    return [Image.open(f.name) for f in upload_files]
+
+
+with gr.Blocks(title="图像生成器") as demo:
+    with gr.Row():
+        with gr.Column(scale=1):
+            quality = gr.Dropdown(
+                choices=quality_options, value="high", label="图片质量"
+            )
+            size = gr.Dropdown(choices=size_options, value="1024x1024", label="分辨率")
+            prompt = gr.TextArea(
+                max_lines=5,
+                label="提示词（英文效果更好）",
+                placeholder="修改图片风格",
+                show_copy_button=True,
+            )
+            upload_files = gr.File(
+                label="参考图（可选，可多选）",
+                file_types=["image"],
+                file_count="multiple",
+            )
+            image_gallery = gr.Gallery(label="预览图", show_label=True, columns=2, height="auto")
+
+        with gr.Column(scale=1):
+            output_image = gr.Image(label="生成图", type="pil")
+            status = gr.Textbox(label="状态", interactive=False)
+    btn_generate = gr.Button("生成图片", variant="primary")
+    upload_files.change(fn=preview_images, inputs=upload_files, outputs=image_gallery)
+
+    btn_generate.click(
+        fn=req_generate,
+        inputs=[quality, size, prompt, upload_files],
+        outputs=[output_image, status],
+    )
+
+demo.launch()
