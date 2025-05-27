@@ -33,6 +33,13 @@ def img_resize(w: int, h: int) -> int:
     return w * h
 
 
+@tool
+def img2img(w: int, h: int) -> int:
+    """generates an image from a given width and height."""
+    print(f"img2img({w}, {h})")
+    return w * h
+
+
 def call_tool(chain, query="resize an image to 100x200"):
     rsp = chain.invoke({"input": query})
     print("rsp: ", rsp)
@@ -58,10 +65,20 @@ def test():
 
     chain = prompt | llm_with_tools
     while True:
-        query = input("Enter a query: ")
-        if query == "exit":
+        try:
+            query = input("Enter a query: ")
+            if query == "exit":
+                break
+            call_tool(chain, query)
+        except EOFError:
+            print("\n你输入 Ctrl+D 即将退出")
             break
-        call_tool(chain, query)
+        except KeyboardInterrupt:
+            print("\n你输入 Ctrl+C 即将退出")
+            break
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            break
 
 
 if __name__ == "__main__":

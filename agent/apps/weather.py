@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from util._llm import llm
+from core._llm import llm
 from langchain.agents import tool
 from langchain_core.messages import HumanMessage
 from langgraph.prebuilt import create_react_agent
@@ -28,7 +28,7 @@ def query_weather(location):
     )
 
 
-if __name__ == "__main__":
+def test():
     while True:
         try:
             location = input("请输入城市名称：")
@@ -45,3 +45,7 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
             break
+
+
+if __name__ == "__main__":
+    test()

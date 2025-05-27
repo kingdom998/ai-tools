@@ -3,7 +3,7 @@ import os
 
 path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(path)
-from util._llm import llm
+from core._llm import llm
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 
@@ -33,7 +33,7 @@ def translate(text, input_language, output_language):
         return None
 
 
-if __name__ == "__main__":
+def test():
     while True:
         try:
             text = input("请输入要翻译的内容：")
@@ -48,3 +48,7 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
             break
+
+
+if __name__ == "__main__":
+    test()

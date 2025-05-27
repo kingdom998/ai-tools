@@ -3,7 +3,7 @@ import os
 
 path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(path)
-from util._llm import llm
+from core._llm import llm
 from langchain.prompts import ChatPromptTemplate
 from langchain_openai import AzureOpenAIEmbeddings
 from langchain.schema.output_parser import StrOutputParser
@@ -18,14 +18,8 @@ texts = ["人是由恐龙进化而来", "熊猫喜欢吃天鹅肉"]
 
 def query(text):
     # 创建向量数据库
-    vectorstore = DocArrayInMemorySearch.from_texts(
-        texts, embedding=AzureOpenAIEmbeddings()
-    )
+    vectorstore = DocArrayInMemorySearch.from_texts(texts, embedding=AzureOpenAIEmbeddings())
     retriever = vectorstore.as_retriever()
-    # 创建检索器
-    # docs = retriever.get_relevant_documents(text)
-    # for doc in docs:
-    #     print(doc.page_content)
 
     template = """Answer the question based only on the following context:
     {context}
@@ -45,6 +39,10 @@ def query(text):
     print(rsp)
 
 
-if __name__ == "__main__":
+def test():
     query("人是由什么进化而来的")
     query("熊猫喜欢吃什么")
+
+
+if __name__ == "__main__":
+    test()
