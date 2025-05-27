@@ -1,5 +1,9 @@
 import streamlit as st
-from tr import translate
+import sys
+import os
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(parent_dir))
+from libs.core.translator import translate
 
 def do_translate(text, input_language, output_language):
     st.session_state.translation = translate(text, input_language, output_language)
