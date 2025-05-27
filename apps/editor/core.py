@@ -1,7 +1,9 @@
-from builtins import print, type, open  # type: ignore
+from builtins import print, open  # type: ignore
 import os
 import base64
 import requests
+import logging
+import sys
 
 endpoint = "https://kunpe-ma2akobm-westus3.cognitiveservices.azure.com"
 route_generate = "/openai/deployments/gpt-image-1/images/generations"
@@ -28,14 +30,27 @@ def generate_image(prompt, quality="high", size="1024x1024", files=None, n=1):
         url = f"{endpoint}{route_edit}?{api_version}"
         response = requests.post(url, headers=headers, data=payload, files=files)
 
-    if response.status_code != 200:
-        print("status_code", response.status_code)
-        print("response", response.text)
-        return None, "图片生成失败，服务器返回错误。"
-    if response.json().get("error"):
-        print("error", response.json().get("error"))
-        return None, response.json().get("error").get("message")
+    log = logging.getLogger(__name__)
+    if response.status_code != 200 or response.json().get("error"):
+        message = f"请求失败:\n 状态码: {response.status_code},\n 信息: {response.text}"
+        log.error(message)
+        return None, message   
 
     data = response.json()["data"]
     imgs = [base64.b64decode(img["b64_json"]) for img in data]
     return imgs, None
+
+
+def init_logger(level=logging.INFO):
+    formatter = logging.Formatter(fmt="%(asctime)s | %(levelname)s | %(name)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(formatter)
+
+    logger = logging.getLogger()
+    logger.setLevel(level)
+    logger.handlers = []  # 清除已有 handler，避免重复日志
+    logger.addHandler(handler)
+
+
+init_logger()

@@ -1,8 +1,6 @@
 import argparse
 import gradio as gr
-from PIL import Image
 import os
-import io
 import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -17,7 +15,7 @@ def new_base_settings():
         quality = gr.Dropdown(choices=quality_options, value="high", label="图片质量")
         size = gr.Dropdown(choices=size_options, value="1024x1024", label="分辨率")
         num = gr.Number(value=1, label="生成数量", step=1, maximum=4)
-    prompt = gr.Textbox(label="提示词", placeholder="修改图片风格", max_lines=3, show_copy_button=True)
+    prompt = gr.TextArea(label="提示词", placeholder="修改图片风格", lines=3, show_copy_button=True)
     return quality, size, num, prompt
 
 
@@ -25,7 +23,7 @@ def new_upload_imgs(label_img_src="原图", label_img_mask="Mask 图"):
     with gr.Tabs():
         with gr.Tab(label_img_src):
             file_uploads = gr.File(label="选择图片", file_types=[".png", ".jpg", ".jpeg", ".webp"], file_count="multiple")
-            gallery = gr.Gallery(label="预览", type="pil", columns=3, height="auto")
+            gallery = gr.Gallery(label="预览", type="pil", columns=3)
         with gr.Tab(label_img_mask):
             img_mask = gr.ImageEditor(label="Mask 图", type="pil", layers=False)
     return file_uploads, gallery, img_mask
@@ -38,8 +36,8 @@ with gr.Blocks(title="图像生成器") as demo:
             file_uploads, img_src, img_mask = new_upload_imgs()
 
         with gr.Column(scale=1):
-            img_outputs = gr.Gallery(label="效果图", type="pil")
-            status = gr.Textbox(label="状态", interactive=False)
+            img_outputs = gr.Gallery(label="效果图", type="file")
+            status = gr.TextArea(label="状态", interactive=False, placeholder="生成状态信息")
             btn_generate = gr.Button("生成图片", variant="primary")
     file_uploads.change(fn=lambda x: x or [], inputs=file_uploads, outputs=img_src)
 
@@ -47,6 +45,6 @@ with gr.Blocks(title="图像生成器") as demo:
     btn_generate.click(fn=req_generate, inputs=inputs, outputs=[img_outputs, status])
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--port", type=int, default=7860, help="端口号，默认 8501")
+parser.add_argument("--port", type=int, default=7860, help="端口号，默认 7860")
 args = parser.parse_args()
 demo.launch(server_port=args.port, server_name="0.0.0.0")
