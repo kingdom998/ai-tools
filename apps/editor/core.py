@@ -4,15 +4,16 @@ import base64
 import requests
 import logging
 import sys
+from dotenv import load_dotenv
 
-endpoint = "https://kunpe-ma2akobm-westus3.cognitiveservices.azure.com"
+
+load_dotenv(override=True)
+endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+api_key = os.getenv("AZURE_OPENAI_API_KEY")
 route_generate = "/openai/deployments/gpt-image-1/images/generations"
 route_edit = "/openai/deployments/gpt-image-1/images/edits"
-api_key = os.environ.get("AZURE_OPENAI_API_KEY")
 api_version = "api-version=2025-04-01-preview"
-headers = {
-    "Authorization": f"Bearer {api_key}",
-}
+headers = {"Authorization": f"Bearer {api_key}"}
 
 
 def generate_image(prompt, quality="high", size="1024x1024", files=None, n=1):
@@ -34,7 +35,7 @@ def generate_image(prompt, quality="high", size="1024x1024", files=None, n=1):
     if response.status_code != 200 or response.json().get("error"):
         message = f"请求失败:\n 状态码: {response.status_code},\n 信息: {response.text}"
         log.error(message)
-        return None, message   
+        return None, message
 
     data = response.json()["data"]
     imgs = [base64.b64decode(img["b64_json"]) for img in data]
