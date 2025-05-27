@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from langchain_openai import AzureChatOpenAI
 from langchain_core.tools import tool
 
+
 @tool
 def add(a: int, b: int) -> int:
     """Adds a and b."""
@@ -51,51 +52,10 @@ llm = AzureChatOpenAI(
 )
 
 
-@tool
-def add(a: int, b: int) -> int:
-    """Adds a and b."""
-    print(f"add({a}, {b})")
-
-    return a + b
-
-
-@tool
-def multiply(a: int, b: int) -> int:
-    """Multiplies a and b."""
-    return a * b
-
-
-@tool
-def img_resize(w: int, h: int) -> int:
-    """Resizes an image to the given width and height."""
-    print(f"img_resize({w}, {h})")
-    return w * h
-
-
-@tool
-def img2img(w: int, h: int) -> int:
-    """generates an image from a given width and height."""
-    print(f"img2img({w}, {h})")
-    return w * h
-
-
-def route(result):
-    if isinstance(result, AgentFinish):
-        return result.return_values["output"]
-    else:
-        tools = {
-            "add": add,
-            "multiply": multiply,
-        }
-        return tools[result.tool].run(result.tool_input)
-
-
 if __name__ == "__main__":
     from langchain_core.prompts import ChatPromptTemplate
 
-    prompt = ChatPromptTemplate.from_messages(
-        [("system", "You are a helpful assistant"), ("user", "{input}")]
-    )
+    prompt = ChatPromptTemplate.from_messages([("system", "You are a helpful assistant"), ("user", "{input}")])
 
     tools = [add, multiply, img_resize]
     llm_with_tools = llm.bind_tools(tools)
