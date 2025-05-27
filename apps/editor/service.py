@@ -40,7 +40,20 @@ def req_generate(quality, size, prompt, upload_files, num, img_mask=None):
         img_files.append(("mask", ("mask.png", buffer, "image/png")))
         log.info("已附加 mask 图")
 
-    img_list, err = generate_image(prompt=prompt, quality=quality, size=size, files=img_files, n=num)
-    imgs = [Image.open(io.BytesIO(img)) for img in img_list] if img_list else [Image.new("RGB", (256, 256), color="white")]
+    byte_list, err = generate_image(prompt=prompt, quality=quality, size=size, files=img_files, n=num)
+    if not byte_list:
+        return ["/tmp/blank.png"], err or "图片生成失败"
+
+    file_paths = []
+    for idx, b in enumerate(byte_list):
+        try:
+            img = Image.open(io.BytesIO(b))
+        except Exception as e:
+            img = Image.new("RGB", (256, 256), color="white")
+        filename = f"{TEMP_DIR}/output-{int(time.time())}-{idx}.png"
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        img.save(filename)
+        file_paths.append(filename)
+
     status = err if err else "图片生成成功！"
-    return imgs, status
+    return file_paths, status
