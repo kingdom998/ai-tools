@@ -3,7 +3,7 @@ import os
 
 path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(path)
-from core._llm import llm
+from utils._llm import llm
 from langchain.prompts import ChatPromptTemplate
 from langchain_openai import AzureOpenAIEmbeddings
 from langchain.schema.output_parser import StrOutputParser

@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from core._llm import llm
+from utils._llm import llm
 from langchain_core.messages import HumanMessage, BaseMessage
 from langgraph.graph.message import add_messages
 from langgraph.checkpoint.memory import MemorySaver

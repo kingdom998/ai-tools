@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from core._llm import llm
+from utils._llm import llm
 from langchain.agents import tool
 from langchain_core.messages import HumanMessage
 from langgraph.prebuilt import create_react_agent
