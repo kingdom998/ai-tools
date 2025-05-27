@@ -1,62 +1,95 @@
-import streamlit as st
+import gradio as gr
 from PIL import Image
 import os
-import sys
 import io
+import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from core import generate_image
 
+quality_options = ["low", "medium", "high"]
+size_options = ["1024x1024", "1024x1536", "1536x1024", "auto"]
 
-st.set_page_config(page_title="图像生成器", layout="wide")
-col1, col2 = st.columns(2)
-with col1:
-    quality = st.selectbox("图片质量:", ["low", "medium", "high"], index=2)
-with col2:
-    size = st.selectbox(
-        "分辨率:", ["1024x1024", "1024x1536", "1536x1024", "auto"], index=0
+
+def create_image_settings_row():
+    with gr.Row():
+        quality = gr.Dropdown(choices=quality_options, value="high", label="图片质量")
+        size = gr.Dropdown(choices=size_options, value="1024x1024", label="分辨率")
+        num = gr.Number(value=1, label="生成数量", step=1, maximum=4)
+    return quality, size, num
+
+
+def create_prompt_input():
+    return gr.TextArea(
+        max_lines=3,
+        label="提示词（英文效果更好）",
+        placeholder="修改图片风格",
+        show_copy_button=True,
     )
-prompt = st.text_area(
-    "提示词（英文效果更好）:", "修改图片风格"
-)
-
-upload_files = st.file_uploader("参考图（可选）:", type=["jpg", "png", "jpeg"], accept_multiple_files=True)
-files = []
-col1, col2 = st.columns(2)
-with col1:
-    if upload_files:
-        pils = []
-        for f in upload_files:
-            f.seek(0)
-            # 注意：需要复制出 file bytes（不然多次使用 f 可能指针错乱）
-            file_bytes = f.read()
-            pils.append(Image.open(io.BytesIO(file_bytes)))  # 显示图像
-            files.append(("image[]", (f.name, io.BytesIO(file_bytes), f.type)))  # 重新用
-
-        st.image(pils, caption=[f.name for f in upload_files], width=600)
-    else:
-        st.info("无参考图")
-
-with col2:
-    st.markdown("**生成图**")
-    output_placeholder = st.empty()
 
 
-# 生成图片按钮
-if st.button("生成图片"):
-    with st.spinner("正在生成图片，请稍候..."):
-        imgs, error = generate_image(
-            prompt=prompt,
-            quality=quality,
-            size=size,
-            files=files,
-            n=2,
-        )
+def upload_imgs(label_img_src="上传图片", label_img_mask="mask"):
+    with gr.Tabs():
+        with gr.Tab(label_img_src):
+            file_uploads = gr.File(
+                label=label_img_src,
+                file_types=[".png", ".jpg", ".jpeg", ".webp"],
+                file_count="multiple",
+            )
+            gallery = gr.Gallery(label="预览", type="pil", columns=3, height="auto")
+        with gr.Tab(label_img_mask):
+            img_mask = gr.ImageEditor(label="mask 图", type="pil", layers=False)
+    return file_uploads, gallery, img_mask
 
-        if error:
-            st.error("图片生成失败，服务器返回错误。")
-            st.write(error)
-        else:
-            output_placeholder.image(imgs, width=600, use_container_width=True)
-            st.success("✅ 图片生成成功！")
-            st.balloons()
+
+def req_generate(quality, size, prompt, upload_files, num, img_mask=None):
+    print(f"生成图片: quality={quality}, size={size}, prompt={prompt}, files={len(upload_files or [])}")
+
+    img_files = []
+    for f in upload_files or []:
+        # 打开文件并构建 requests 所需的 tuple: (filename, fileobj, mimetype)
+        # mimetype 可以根据需要指定或让 requests 自动推断
+        file_tuple = (os.path.basename(f), open(f, "rb"), "image/png")
+        img_files.append(("image[]", file_tuple))
+    if img_mask["layers"]:
+        mask_img = img_mask["layers"][0]
+        mask_img.save("mask.png", format="PNG")
+        buffer = io.BytesIO()
+        mask_img.save(buffer, format="PNG")  # 把 mask 图保存为 PNG 格式到内存
+        buffer.seek(0)
+
+        img_files.append(("mask", ("mask.png", buffer, "image/png")))
+        print("已附加 mask 图")
+
+    img_list, err = generate_image(prompt=prompt, quality=quality, size=size, files=img_files, n=num)
+    imgs = [Image.new("RGB", (512, 512), color="white")]
+    if img_list:
+        imgs = [Image.open(io.BytesIO(img)) for img in img_list]
+    status = err if err else "图片生成成功！"
+    return imgs, status
+
+
+with gr.Blocks(title="图像生成器") as demo:
+    with gr.Row():
+        with gr.Column(scale=1):
+            #    with gr.Row():
+            quality, size, num = create_image_settings_row()
+            prompt = create_prompt_input()
+            file_uploads, img_src, img_mask = upload_imgs()
+
+        with gr.Column(scale=1):
+            img_outputs = gr.Gallery(
+                label="效果图",
+                type="pil",
+            )
+            status = gr.Textbox(label="状态", interactive=False)
+            btn_generate = gr.Button("生成图片", variant="primary")
+    file_uploads.change(fn=lambda x: x or [], inputs=file_uploads, outputs=img_src)
+
+    btn_generate.click(
+        fn=req_generate,
+        inputs=[quality, size, prompt, file_uploads, num, img_mask],
+        outputs=[img_outputs, status],
+    )
+
+demo.launch(server_port=8501, server_name="0.0.0.0")
