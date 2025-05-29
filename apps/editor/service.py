@@ -4,6 +4,7 @@ import io
 import sys
 import time
 import logging
+import uuid
 
 log = logging.getLogger(__name__)
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -15,7 +16,8 @@ os.makedirs(TEMP_DIR, exist_ok=True)  # 若目录不存在，则自动创建
 
 
 def req_generate(quality, size, prompt, upload_files, num, img_mask=None):
-    log.info(f"生成图片: quality={quality}, size={size}, prompt={prompt}, files={len(upload_files or [])}")
+    msg_id = uuid.uuid4()
+    log.info(f"生成图片: quality={quality}, size={size}, prompt={prompt}, files={len(upload_files or [])}, msg_id={msg_id}")
 
     img_files = []
     for f in upload_files or []:
@@ -26,21 +28,22 @@ def req_generate(quality, size, prompt, upload_files, num, img_mask=None):
     layers = img_mask.get("layers", [])
     if layers:
         mask_img = layers[0]
-        log.info(f"Mask 图层数量: {len(layers)}, layers: {layers}")
+        log.info(f"Mask 图层数量: {len(layers)}, layers: {layers}, msg_id={msg_id}")
 
         filename = f"mask-{int(time.time())}.png"
         file_path = os.path.join(TEMP_DIR, filename)
         mask_img.save(file_path, format="PNG")
-        log.info(f"已保存 mask 图到: {file_path}")
+        log.info(f"已保存 mask 图到: {file_path}, msg_id={msg_id}")
 
         buffer = io.BytesIO()
         mask_img.save(buffer, format="PNG")  # 把 mask 图保存为 PNG 格式到内存
         buffer.seek(0)
 
         img_files.append(("mask", ("mask.png", buffer, "image/png")))
-        log.info("已附加 mask 图")
+        log.info(f"已附加 mask 图, msg_id={msg_id}")
 
     byte_list, err = generate_image(prompt=prompt, quality=quality, size=size, files=img_files, n=num)
+    log.info(f"生成完成, msg_id={msg_id}")
     if not byte_list:
         return ["/tmp/blank.png"], err or "图片生成失败"
 
